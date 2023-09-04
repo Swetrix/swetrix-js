@@ -268,13 +268,7 @@ export class Lib {
     if (!this.pageData) return
     this.pageData.path = pg
 
-    console.log('track page')
-    console.log('pg: ', pg)
-
     const shouldIgnore = this.checkIgnore(pg)
-
-    console.log('shouldIgnore: ', shouldIgnore)
-    console.log('doNotAnonymise: ', this.pageViewsOptions?.doNotAnonymise)
 
     if (shouldIgnore && this.pageViewsOptions?.doNotAnonymise) return
 
