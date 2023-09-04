@@ -58,7 +58,7 @@ export interface PageViewsOptions {
   /** A list of Regular Expressions or string pathes to ignore. */
   ignore?: Array<string | RegExp>
 
-  /** Do not send pathes from 'ignore' list to the API. Is set to false, pageview information will be sent to Swetrix API but the page will be displayed as 'Redacted' in Dashboard. */
+  /** Do not send paths from ignore list to API. If set to `false`, the page view information will be sent to the Swetrix API, but the page will be displayed as a 'Redacted page' in the dashboard. */
   doNotAnonymise?: boolean
 
   /** Do not send Heartbeat requests to the server. */
@@ -268,7 +268,13 @@ export class Lib {
     if (!this.pageData) return
     this.pageData.path = pg
 
+    console.log('track page')
+    console.log('pg: ', pg)
+
     const shouldIgnore = this.checkIgnore(pg)
+
+    console.log('shouldIgnore: ', shouldIgnore)
+    console.log('doNotAnonymise: ', this.pageViewsOptions?.doNotAnonymise)
 
     if (shouldIgnore && this.pageViewsOptions?.doNotAnonymise) return
 
