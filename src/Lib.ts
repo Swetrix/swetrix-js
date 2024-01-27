@@ -47,14 +47,25 @@ export interface TrackEventOptions {
 
 // Partial user-editable pageview payload
 export interface IPageViewPayload {
-  lc: string
-  tz: string
-  ref: string
-  so: string
-  me: string
-  ca: string
-  pg: string | null
+  lc: string | undefined
+  tz: string | undefined
+  ref: string | undefined
+  so: string | undefined
+  me: string | undefined
+  ca: string | undefined
+  pg: string
   prev: string | null | undefined
+}
+
+interface IPerfPayload {
+  dns: number
+  tls: number
+  conn: number
+  response: number
+  render: number
+  dom_load: number
+  page_load: number
+  ttfb: number
 }
 
 /**
@@ -80,12 +91,6 @@ export interface PageViewsOptions {
    */
   unique?: boolean
 
-  /** A list of Regular Expressions or string pathes to ignore. */
-  ignore?: Array<string | RegExp>
-
-  /** Do not send paths from ignore list to API. If set to `false`, the page view information will be sent to the Swetrix API, but the page will be displayed as a 'Redacted page' in the dashboard. */
-  doNotAnonymise?: boolean
-
   /** Do not send Heartbeat requests to the server. */
   noHeartbeat?: boolean
 
@@ -108,7 +113,7 @@ export interface PageViewsOptions {
   search?: boolean
 
   /** Callback to edit / prevent sending pageviews */
-  callback?: (payload: IPageViewPayload, isIgnored: boolean) => IPageViewPayload | boolean
+  callback?: (payload: IPageViewPayload) => IPageViewPayload | boolean
 }
 
 export const defaultPageActions = {
@@ -186,7 +191,7 @@ export class Lib {
     return this.pageData.actions
   }
 
-  getPerformanceStats(): object {
+  getPerformanceStats(): IPerfPayload | {} {
     if (!this.canTrack() || this.perfStatsCollected || !window.performance?.getEntriesByType) {
       return {}
     }
@@ -230,19 +235,6 @@ export class Lib {
     this.sendRequest('hb', data)
   }
 
-  private checkIgnore(path: string): boolean {
-    const ignore = this.pageViewsOptions?.ignore
-
-    if (Array.isArray(ignore)) {
-      for (let i = 0; i < ignore.length; ++i) {
-        if (ignore[i] === path) return true
-        // @ts-ignore
-        if (ignore[i] instanceof RegExp && ignore[i].test(path)) return true
-      }
-    }
-    return false
-  }
-
   // Tracking path changes. If path changes -> calling this.trackPage method
   private trackPathChange(): void {
     if (!this.pageData) return
@@ -261,13 +253,7 @@ export class Lib {
     // Assuming that this function is called in trackPage and this.activePage is not overwritten by new value yet
     // That method of getting previous page works for SPA websites
     if (this.activePage) {
-      const shouldIgnore = this.checkIgnore(this.activePage)
-
-      if (shouldIgnore && this.pageViewsOptions?.doNotAnonymise) {
-        return null
-      }
-
-      return shouldIgnore ? null : this.activePage
+      return this.activePage
     }
 
     // Checking if URL is supported by the browser (for example, IE11 does not support it)
@@ -289,13 +275,7 @@ export class Lib {
           return null
         }
 
-        const shouldIgnore = this.checkIgnore(pathname)
-
-        if (shouldIgnore && this.pageViewsOptions?.doNotAnonymise) {
-          return null
-        }
-
-        return shouldIgnore ? null : pathname
+        return pathname
       } catch {
         return null
       }
@@ -308,10 +288,6 @@ export class Lib {
     if (!this.pageData) return
     this.pageData.path = pg
 
-    const shouldIgnore = this.checkIgnore(pg)
-
-    if (shouldIgnore && this.pageViewsOptions?.doNotAnonymise) return
-
     const perf = this.getPerformanceStats()
 
     let prev
@@ -321,25 +297,47 @@ export class Lib {
     }
 
     this.activePage = pg
-    this.submitPageView(shouldIgnore ? null : pg, prev, unique, perf)
+    this.submitPageView(pg, prev, unique, perf, true)
   }
 
-  submitPageView(pg: null | string, prev: string | null | undefined, unique: boolean, perf: any): void {
-    const data = {
+  submitPageView(
+    pg: string,
+    prev: string | null | undefined,
+    unique: boolean,
+    perf: IPerfPayload | {},
+    evokeCallback?: boolean,
+  ): void {
+    const privateData = {
       pid: this.projectID,
+      perf,
+      unique,
+    }
+    const pvPayload = {
       lc: getLocale(),
       tz: getTimezone(),
       ref: getReferrer(),
       so: getUTMSource(),
       me: getUTMMedium(),
       ca: getUTMCampaign(),
-      unique,
       pg,
-      perf,
       prev,
     }
 
-    this.sendRequest('', data)
+    if (evokeCallback && this.pageViewsOptions?.callback) {
+      const callbackResult = this.pageViewsOptions.callback(pvPayload)
+
+      if (callbackResult === false) {
+        return
+      }
+
+      if (callbackResult && typeof callbackResult === 'object') {
+        Object.assign(pvPayload, callbackResult)
+      }
+    }
+
+    Object.assign(pvPayload, privateData)
+
+    this.sendRequest('', pvPayload)
   }
 
   private debug(message: string): void {
