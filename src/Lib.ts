@@ -1,6 +1,14 @@
 import {
-  isInBrowser, isLocalhost, isAutomated, getLocale, getTimezone, getReferrer,
-  getUTMCampaign, getUTMMedium, getUTMSource, getPath,
+  isInBrowser,
+  isLocalhost,
+  isAutomated,
+  getLocale,
+  getTimezone,
+  getReferrer,
+  getUTMCampaign,
+  getUTMMedium,
+  getUTMSource,
+  getPath,
 } from './utils'
 
 export interface LibOptions {
@@ -35,6 +43,18 @@ export interface TrackEventOptions {
   meta?: {
     [key: string]: string
   }
+}
+
+// Partial user-editable pageview payload
+export interface IPageViewPayload {
+  lc: string
+  tz: string
+  ref: string
+  so: string
+  me: string
+  ca: string
+  pg: string | null
+  prev: string | null | undefined
 }
 
 /**
@@ -86,6 +106,9 @@ export interface PageViewsOptions {
    * For example if you have pages like /path?search
    */
   search?: boolean
+
+  /** Callback to edit / prevent sending pageviews */
+  callback?: (payload: IPageViewPayload, isIgnored: boolean) => IPageViewPayload | boolean
 }
 
 export const defaultPageActions = {
@@ -168,7 +191,7 @@ export class Lib {
       return {}
     }
 
-    const perf = window.performance.getEntriesByType('navigation')[0]
+    const perf = window.performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming
 
     if (!perf) {
       return {}
@@ -178,25 +201,19 @@ export class Lib {
 
     return {
       // Network
-      // @ts-ignore
       dns: perf.domainLookupEnd - perf.domainLookupStart, // DNS Resolution
-      // @ts-ignore
       tls: perf.secureConnectionStart ? perf.requestStart - perf.secureConnectionStart : 0, // TLS Setup; checking if secureConnectionStart is not 0 (it's 0 for non-https websites)
-      // @ts-ignore
-      conn: perf.secureConnectionStart ? perf.secureConnectionStart - perf.connectStart : perf.connectEnd - perf.connectStart, // Connection time
-      // @ts-ignore
+      conn: perf.secureConnectionStart
+        ? perf.secureConnectionStart - perf.connectStart
+        : perf.connectEnd - perf.connectStart, // Connection time
       response: perf.responseEnd - perf.responseStart, // Response Time (Download)
 
       // Frontend
-      // @ts-ignore
       render: perf.domComplete - perf.domContentLoadedEventEnd, // Browser rendering the HTML time
-      // @ts-ignore
       dom_load: perf.domContentLoadedEventEnd - perf.responseEnd, // DOM loading timing
-      // @ts-ignore
       page_load: perf.loadEventStart, // Page load time
 
       // Backend
-      // @ts-ignore
       ttfb: perf.responseStart - perf.requestStart,
     }
   }
@@ -333,7 +350,7 @@ export class Lib {
 
   private canTrack(): boolean {
     if (this.options?.disabled) {
-      this.debug('Tracking disabled: the \'disabled\' setting is set to true.')
+      this.debug("Tracking disabled: the 'disabled' setting is set to true.")
       return false
     }
 
@@ -343,7 +360,7 @@ export class Lib {
     }
 
     if (this.options?.respectDNT && window.navigator?.doNotTrack === '1') {
-      this.debug('Tracking disabled: respecting user\'s \'Do Not Track\' preference.')
+      this.debug("Tracking disabled: respecting user's 'Do Not Track' preference.")
       return false
     }
 
