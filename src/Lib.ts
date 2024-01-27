@@ -91,9 +91,6 @@ export interface PageViewsOptions {
    */
   unique?: boolean
 
-  /** Do not send Heartbeat requests to the server. */
-  noHeartbeat?: boolean
-
   /** Send Heartbeat requests when the website tab is not active in the browser. */
   heartbeatOnBackground?: boolean
 
@@ -159,15 +156,14 @@ export class Lib {
     }
 
     this.pageViewsOptions = options
-    let hbInterval: NodeJS.Timeout, interval: NodeJS.Timeout
+    let interval: NodeJS.Timeout
+
     if (!options?.unique) {
       interval = setInterval(this.trackPathChange, 2000)
     }
 
-    if (!options?.noHeartbeat) {
-      setTimeout(this.heartbeat, 3000)
-      hbInterval = setInterval(this.heartbeat, 28000)
-    }
+    setTimeout(this.heartbeat, 3000)
+    const hbInterval = setInterval(this.heartbeat, 28000)
 
     const path = getPath({
       hash: options?.hash,
