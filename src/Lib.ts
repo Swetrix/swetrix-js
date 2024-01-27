@@ -133,6 +133,7 @@ export class Lib {
     }
 
     const data = {
+      ...event,
       pid: this.projectID,
       pg: this.activePage,
       lc: getLocale(),
@@ -141,7 +142,6 @@ export class Lib {
       so: getUTMSource(),
       me: getUTMMedium(),
       ca: getUTMCampaign(),
-      ...event,
     }
     this.sendRequest('custom', data)
   }
