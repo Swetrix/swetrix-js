@@ -97,9 +97,6 @@ export interface PageViewsOptions {
   /** Send Heartbeat requests when the website tab is not active in the browser. */
   heartbeatOnBackground?: boolean
 
-  /** Disable user-flow */
-  noUserFlow?: boolean
-
   /**
    * Set to `true` to enable hash-based routing.
    * For example if you have pages like /#/path or want to track pages like /path#hash
@@ -290,11 +287,7 @@ export class Lib {
 
     const perf = this.getPerformanceStats()
 
-    let prev
-
-    if (!this.pageViewsOptions?.noUserFlow) {
-      prev = this.getPreviousPage()
-    }
+    const prev = this.getPreviousPage()
 
     this.activePage = pg
     this.submitPageView(pg, prev, unique, perf, true)
