@@ -13,9 +13,9 @@ import {
 
 export interface LibOptions {
   /**
-   * When set to `true`, all tracking logs will be printed to console and localhost events will be sent to server.
+   * When set to `true`, localhost events will be sent to server.
    */
-  debug?: boolean
+  devMode?: boolean
 
   /**
    * When set to `true`, the tracking library won't send any data to server.
@@ -329,34 +329,14 @@ export class Lib {
     this.sendRequest('', pvPayload)
   }
 
-  private debug(message: string): void {
-    if (this.options?.debug) {
-      console.log('[Swetrix]', message)
-    }
-  }
-
   private canTrack(): boolean {
-    if (this.options?.disabled) {
-      this.debug("Tracking disabled: the 'disabled' setting is set to true.")
-      return false
-    }
-
-    if (!isInBrowser()) {
-      this.debug('Tracking disabled: script does not run in browser environment.')
-      return false
-    }
-
-    if (this.options?.respectDNT && window.navigator?.doNotTrack === '1') {
-      this.debug("Tracking disabled: respecting user's 'Do Not Track' preference.")
-      return false
-    }
-
-    if (!this.options?.debug && isLocalhost()) {
-      return false
-    }
-
-    if (isAutomated()) {
-      this.debug('Tracking disabled: navigation is automated by WebDriver.')
+    if (
+      this.options?.disabled ||
+      !isInBrowser() ||
+      (this.options?.respectDNT && window.navigator?.doNotTrack === '1') ||
+      (!this.options?.devMode && isLocalhost()) ||
+      isAutomated()
+    ) {
       return false
     }
 
