@@ -106,7 +106,12 @@ export interface PageViewsOptions {
    */
   search?: boolean
 
-  /** Callback to edit / prevent sending pageviews */
+  /**
+   * Callback to edit / prevent sending pageviews.
+   *
+   * @param payload - The pageview payload.
+   * @returns The edited payload or `false` to prevent sending the pageview. If `true` is returned, the payload will be sent as-is.
+   */
   callback?: (payload: IPageViewPayload) => IPageViewPayload | boolean
 }
 
