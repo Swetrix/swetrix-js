@@ -177,6 +177,7 @@ export class Lib {
     this.captureError = this.captureError.bind(this)
   }
 
+  // t
   captureError(event: ErrorEvent): void {
     if (typeof this.errorsOptions?.sampleRate === 'number' && this.errorsOptions.sampleRate > Math.random()) {
       return
