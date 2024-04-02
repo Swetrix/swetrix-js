@@ -150,12 +150,16 @@
             };
         };
         Lib.prototype.submitError = function (payload, evokeCallback) {
-            var _a;
+            var _a, _b, _c;
             var privateData = {
                 pid: this.projectID,
             };
-            var errorPayload = __assign({ pg: this.activePage, lc: getLocale(), tz: getTimezone() }, payload);
-            if (evokeCallback && ((_a = this.errorsOptions) === null || _a === void 0 ? void 0 : _a.callback)) {
+            var errorPayload = __assign({ pg: this.activePage ||
+                    getPath({
+                        hash: (_a = this.pageViewsOptions) === null || _a === void 0 ? void 0 : _a.hash,
+                        search: (_b = this.pageViewsOptions) === null || _b === void 0 ? void 0 : _b.search,
+                    }), lc: getLocale(), tz: getTimezone() }, payload);
+            if (evokeCallback && ((_c = this.errorsOptions) === null || _c === void 0 ? void 0 : _c.callback)) {
                 var callbackResult = this.errorsOptions.callback(errorPayload);
                 if (callbackResult === false) {
                     return;

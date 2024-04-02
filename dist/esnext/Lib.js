@@ -54,7 +54,11 @@ export class Lib {
             pid: this.projectID,
         };
         const errorPayload = {
-            pg: this.activePage,
+            pg: this.activePage ||
+                getPath({
+                    hash: this.pageViewsOptions?.hash,
+                    search: this.pageViewsOptions?.search,
+                }),
             lc: getLocale(),
             tz: getTimezone(),
             ...payload,
