@@ -4,6 +4,9 @@
 </picture>
 <br /><br />
 
+> [!NOTE]
+> This repository has been archived. Development has moved to the [Swetrix monorepo](https://github.com/Swetrix/swetrix) under [`packages/tracker-js`](https://github.com/Swetrix/swetrix/tree/main/packages/tracker-js). Please open issues and pull requests there instead.
+
 [![JSDelivr hits](https://data.jsdelivr.com/v1/package/gh/Swetrix/swetrix-js/badge?style=rounded)](https://data.jsdelivr.com/v1/package/gh/Swetrix/swetrix-js/stats)
 [![Package size](https://img.shields.io/bundlephobia/minzip/swetrix)](https://bundlephobia.com/api/size?package=swetrix)
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/swetrix/swetrix-js/issues)
